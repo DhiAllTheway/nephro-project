@@ -1,0 +1,96 @@
+<div class="mb-4 flex items-center justify-between">
+  <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">New Lab Report</h1>
+
+  <a
+    routerLink="/lab-reports"
+    class="rounded-lg border border-gray-200 px-4 py-2 text-gray-700 hover:bg-gray-50 dark:border-gray-800 dark:text-gray-200 dark:hover:bg-white/[0.03]"
+  >
+    Back
+  </a>
+</div>
+
+@if (error) {
+  <div class="mb-4 rounded-xl border border-red-300 bg-red-50 p-4 text-red-700">
+    {{ error }}
+  </div>
+}
+
+<div class="rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
+  <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+    <!-- Patient ID -->
+    <div>
+      <label class="mb-1 block text-sm text-gray-500">Patient ID *</label>
+      <input
+        class="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 dark:border-gray-800 dark:bg-gray-900"
+        type="number"
+        [(ngModel)]="form.patientId"
+        name="patientId"
+        placeholder="ex: 10"
+      />
+    </div>
+
+    <!-- Date -->
+    <div>
+      <label class="mb-1 block text-sm text-gray-500">Report Date *</label>
+      <input
+        class="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 dark:border-gray-800 dark:bg-gray-900"
+        type="date"
+        [(ngModel)]="form.reportDate"
+        name="reportDate"
+      />
+    </div>
+
+    <!-- Analysis Type -->
+    <div>
+      <label class="mb-1 block text-sm text-gray-500">Analysis Type *</label>
+      <input
+        class="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 dark:border-gray-800 dark:bg-gray-900"
+        type="text"
+        [(ngModel)]="form.analysisType"
+        name="analysisType"
+        placeholder="Blood, Urine..."
+      />
+    </div>
+
+    <!-- Laboratory Name -->
+    <div>
+      <label class="mb-1 block text-sm text-gray-500">Laboratory Name *</label>
+      <input
+        class="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 dark:border-gray-800 dark:bg-gray-900"
+        type="text"
+        [(ngModel)]="form.laboratoryName"
+        name="laboratoryName"
+        placeholder="Lab A..."
+      />
+    </div>
+
+    <!-- Comment (full width) -->
+    <div class="md:col-span-2">
+      <label class="mb-1 block text-sm text-gray-500">Comment</label>
+      <textarea
+        class="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 dark:border-gray-800 dark:bg-gray-900"
+        rows="4"
+        [(ngModel)]="form.comment"
+        name="comment"
+        placeholder="Optional notes..."
+      ></textarea>
+    </div>
+  </div>
+
+  <div class="mt-6 flex items-center gap-3">
+    <button
+      (click)="save()"
+      [disabled]="loading"
+      class="rounded-lg bg-brand-500 px-4 py-2 text-white hover:bg-brand-600 disabled:opacity-60"
+    >
+      {{ loading ? 'Saving...' : 'Save' }}
+    </button>
+
+    <a
+      routerLink="/lab-reports"
+      class="rounded-lg border border-gray-200 px-4 py-2 text-gray-700 hover:bg-gray-50 dark:border-gray-800 dark:text-gray-200 dark:hover:bg-white/[0.03]"
+    >
+      Cancel
+    </a>
+  </div>
+</div>

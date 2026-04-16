@@ -1,0 +1,262 @@
+<div class="mb-4 flex items-center justify-between">
+  <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">
+    Lab Report Details
+  </h1>
+
+  <div class="flex gap-2">
+    <a
+      routerLink="/lab-reports"
+      class="rounded-lg border border-gray-200 px-4 py-2 dark:border-gray-800"
+    >
+      Back
+    </a>
+
+    <a
+      class="rounded-lg bg-brand-500 px-4 py-2 text-white hover:bg-brand-600"
+      [routerLink]="['/lab-reports', reportId, 'edit']"
+    >
+      Edit
+    </a>
+  </div>
+</div>
+
+@if (loading) {
+  <div class="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
+    Loading...
+  </div>
+}
+
+@if (error) {
+  <div class="mb-4 rounded-xl border border-red-300 bg-red-50 p-4 text-red-700">
+    {{ error }}
+  </div>
+}
+
+@if (!loading && reportDto) {
+
+  <!-- ✅ Summary / Advanced Banner -->
+  <div class="mb-6 rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
+    <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+      <div>
+        <div class="text-sm text-gray-500">Patient</div>
+        <div class="text-lg font-semibold text-gray-900 dark:text-white">
+          #{{ reportDto.patientId }}
+        </div>
+      </div>
+
+      <div>
+        <div class="text-sm text-gray-500">Date</div>
+        <div class="font-medium text-gray-900 dark:text-white">
+          {{ reportDto.reportDate }}
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <span class="text-sm text-gray-500">Report status</span>
+        <span class="rounded-full border px-3 py-1 text-sm font-medium"
+              [class]="reportBadgeClass(reportDto.reportStatus)">
+          {{ reportDto.reportStatus }}
+        </span>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <span class="text-sm text-gray-500">Abnormal count</span>
+        <span class="rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-sm font-semibold text-gray-900 dark:border-gray-800 dark:bg-white/[0.03] dark:text-white">
+          {{ reportDto.abnormalCount }}
+        </span>
+      </div>
+    </div>
+
+    <div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+      <div>
+        <div class="text-sm text-gray-500">Analysis Type</div>
+        <div class="font-medium text-gray-900 dark:text-white">{{ reportDto.analysisType }}</div>
+      </div>
+
+      <div>
+        <div class="text-sm text-gray-500">Laboratory</div>
+        <div class="font-medium text-gray-900 dark:text-white">{{ reportDto.laboratoryName }}</div>
+      </div>
+
+      <div class="md:col-span-2">
+        <div class="text-sm text-gray-500">Comment</div>
+        <div class="font-medium text-gray-900 dark:text-white">{{ reportDto.comment }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Results Section -->
+  <div class="rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
+
+    <div class="mb-4 flex items-center justify-between">
+      <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+        Biological Results (Advanced)
+      </h2>
+
+      <button
+        (click)="toggleAddForm()"
+        class="rounded-lg bg-brand-500 px-4 py-2 text-white hover:bg-brand-600"
+      >
+        + Add Result
+      </button>
+    </div>
+
+    <!-- ADD FORM -->
+    @if (showAddForm) {
+      <div class="mb-6 rounded-lg border border-gray-200 p-4 dark:border-gray-800">
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+
+          <input [(ngModel)]="newResult.parameterName"
+                 placeholder="Parameter"
+                 class="border rounded px-3 py-2" />
+
+          <input type="number"
+                 [(ngModel)]="newResult.value"
+                 placeholder="Value"
+                 class="border rounded px-3 py-2" />
+
+          <input [(ngModel)]="newResult.unit"
+                 placeholder="Unit"
+                 class="border rounded px-3 py-2" />
+
+          <input type="number"
+                 [(ngModel)]="newResult.normalMinValue"
+                 placeholder="Normal Min"
+                 class="border rounded px-3 py-2" />
+
+          <input type="number"
+                 [(ngModel)]="newResult.normalMaxValue"
+                 placeholder="Normal Max"
+                 class="border rounded px-3 py-2" />
+
+        </div>
+
+        <div class="mt-4 flex gap-2">
+          <button
+            (click)="addResult()"
+            class="rounded-lg bg-brand-500 px-4 py-2 text-white hover:bg-brand-600"
+          >
+            Save Result
+          </button>
+
+          <button
+            (click)="toggleAddForm()"
+            class="rounded-lg border border-gray-200 px-4 py-2 dark:border-gray-800"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- RESULTS TABLE -->
+    <table class="w-full text-left">
+      <thead>
+        <tr class="border-b border-gray-200 dark:border-gray-800">
+          <th class="py-2">Parameter</th>
+          <th class="py-2">Value</th>
+          <th class="py-2">Normal</th>
+          <th class="py-2">Status</th>
+          <th class="py-2">Severity</th>
+          <th class="py-2">Actions</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        @for (res of resultsDto; track res.id) {
+
+          <tr class="border-b border-gray-100 dark:border-gray-800">
+
+            @if (editingResultId === res.id) {
+
+              <td class="py-2">
+                <input [(ngModel)]="editResult.parameterName"
+                       class="w-full border rounded px-2 py-1" />
+              </td>
+
+              <td class="py-2">
+                <input type="number"
+                       [(ngModel)]="editResult.value"
+                       class="w-full border rounded px-2 py-1" />
+              </td>
+
+              <td class="py-2">
+                <input type="number"
+                       [(ngModel)]="editResult.normalMinValue"
+                       class="w-16 border rounded px-2 py-1" />
+                -
+                <input type="number"
+                       [(ngModel)]="editResult.normalMaxValue"
+                       class="w-16 border rounded px-2 py-1" />
+              </td>
+
+              <td class="py-2 text-sm text-gray-500">auto</td>
+              <td class="py-2 text-sm text-gray-500">auto</td>
+
+              <td class="py-2 flex gap-2">
+                <button (click)="saveEdit()" class="text-green-600 hover:underline">
+                  Save
+                </button>
+                <button (click)="cancelEdit()" class="text-gray-600 hover:underline">
+                  Cancel
+                </button>
+              </td>
+
+            } @else {
+
+              <td class="py-2">
+                <div class="font-medium text-gray-900 dark:text-white">{{ res.parameterName }}</div>
+                <div class="text-xs text-gray-500">{{ res.unit }}</div>
+              </td>
+
+              <td class="py-2 font-medium text-gray-900 dark:text-white">
+                {{ res.value }}
+              </td>
+
+              <td class="py-2 text-gray-700 dark:text-gray-200">
+                {{ res.normalMinValue }} - {{ res.normalMaxValue }}
+              </td>
+
+              <td class="py-2">
+                <span class="rounded-full border px-3 py-1 text-xs font-semibold"
+                      [class]="badgeClass(res.status)">
+                  {{ res.status }}
+                </span>
+                @if (res.isAbnormal) {
+                  <span class="ml-2 text-xs font-semibold text-red-600">ABNORMAL</span>
+                }
+              </td>
+
+              <td class="py-2">
+                <div class="font-semibold text-gray-900 dark:text-white">{{ res.severity }}</div>
+                <div class="text-xs text-gray-500">score</div>
+              </td>
+
+              <td class="py-2 flex gap-3">
+                <button (click)="startEdit(res)"
+                        class="text-blue-600 hover:underline">
+                  Edit
+                </button>
+
+                <button (click)="deleteResult(res.id)"
+                        class="text-red-600 hover:underline">
+                  Delete
+                </button>
+              </td>
+
+            }
+
+          </tr>
+
+        }
+      </tbody>
+    </table>
+
+    @if (resultsDto.length === 0) {
+      <div class="mt-4 text-sm text-gray-500">
+        No results yet.
+      </div>
+    }
+
+  </div>
+}

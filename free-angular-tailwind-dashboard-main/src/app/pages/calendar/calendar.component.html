@@ -1,0 +1,89 @@
+<div class="space-y-6">
+
+  <!-- HEADER -->
+  <div class="flex items-center justify-between">
+
+    <button
+      (click)="prevMonth()"
+      class="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300"
+    >
+      ◀
+    </button>
+
+    <h1 class="text-xl font-semibold">
+      📅 {{ getMonthYear() }}
+    </h1>
+
+    <button
+      (click)="nextMonth()"
+      class="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300"
+    >
+      ▶
+    </button>
+
+  </div>
+
+  <!-- GRID -->
+  <div class="grid grid-cols-7 gap-2">
+
+    <!-- Days -->
+    <div class="text-center font-medium">Sun</div>
+    <div class="text-center font-medium">Mon</div>
+    <div class="text-center font-medium">Tue</div>
+    <div class="text-center font-medium">Wed</div>
+    <div class="text-center font-medium">Thu</div>
+    <div class="text-center font-medium">Fri</div>
+    <div class="text-center font-medium">Sat</div>
+
+    @for (d of days; track d) {
+
+      <div
+        class="h-28 border rounded-xl p-2 relative transition"
+        [ngClass]="{
+          'bg-blue-50 border-blue-400': isToday(d),
+          'bg-red-50 border-red-400': isUrgent(d)
+        }"
+      >
+
+        @if (d) {
+
+          <!-- DAY -->
+          <div class="text-sm font-semibold">
+            {{ d.day }}
+          </div>
+
+          <!-- EVENTS -->
+          <div class="mt-1 space-y-1">
+
+            @for (e of d.events; track e) {
+
+              <div
+                (click)="openEvent(e)"
+                class="cursor-pointer px-2 py-1 rounded-lg text-xs font-semibold shadow hover:scale-105 transition"
+                [ngClass]="{
+                  'bg-blue-400 text-white': e.type === 'REPORT',
+                  'bg-red-500 text-white animate-pulse': e.type === 'URGENT',
+                  'bg-yellow-300': e.type === 'FOLLOW_UP',
+                  'bg-green-300': e.type === 'NORMAL'
+                }"
+              >
+                @if (e.type === 'REPORT') {
+                  📄 Report #{{ e.reportId }}
+                } @else {
+                  🧪 Follow-up #{{ e.reportId }}
+                }
+              </div>
+
+            }
+
+          </div>
+
+        }
+
+      </div>
+
+    }
+
+  </div>
+
+</div>

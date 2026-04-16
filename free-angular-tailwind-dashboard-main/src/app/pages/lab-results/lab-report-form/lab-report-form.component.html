@@ -1,0 +1,72 @@
+<h1 class="mb-6 text-2xl font-semibold text-gray-900 dark:text-white">
+  @if (isEditMode) { Edit Lab Report } @else { New Lab Report }
+</h1>
+
+@if (loading) {
+  <div class="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
+    Loading...
+  </div>
+}
+
+@if (!loading) {
+  <div class="rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
+
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+
+      <div>
+        <label class="block mb-1 text-sm text-gray-500">Patient ID</label>
+        <input type="number"
+               [(ngModel)]="form.patientId"
+               class="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 dark:border-gray-800 dark:bg-gray-900">
+      </div>
+
+      <div>
+        <label class="block mb-1 text-sm text-gray-500">Report Date</label>
+        <input type="date"
+               [(ngModel)]="form.reportDate"
+               class="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 dark:border-gray-800 dark:bg-gray-900">
+      </div>
+
+      <div>
+        <label class="block mb-1 text-sm text-gray-500">Analysis Type</label>
+        <input type="text"
+               [(ngModel)]="form.analysisType"
+               class="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 dark:border-gray-800 dark:bg-gray-900">
+      </div>
+
+      <div>
+        <label class="block mb-1 text-sm text-gray-500">Laboratory Name</label>
+        <input type="text"
+               [(ngModel)]="form.laboratoryName"
+               class="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 dark:border-gray-800 dark:bg-gray-900">
+      </div>
+
+      <div class="md:col-span-2">
+        <label class="block mb-1 text-sm text-gray-500">Comment</label>
+        <textarea [(ngModel)]="form.comment"
+                  rows="3"
+                  class="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 dark:border-gray-800 dark:bg-gray-900"></textarea>
+      </div>
+
+    </div>
+
+    @if (error) {
+      <div class="mt-4 rounded-lg bg-red-50 p-3 text-red-700">
+        {{ error }}
+      </div>
+    }
+
+    <div class="mt-6 flex gap-3">
+      <button (click)="save()"
+              [disabled]="loading"
+              class="rounded-lg bg-brand-500 px-4 py-2 text-white hover:bg-brand-600 disabled:opacity-50">
+        @if (isEditMode) { Update } @else { Save }
+      </button>
+
+      <a routerLink="/lab-reports"
+         class="rounded-lg border border-gray-200 px-4 py-2 dark:border-gray-800">
+        Cancel
+      </a>
+    </div>
+  </div>
+}

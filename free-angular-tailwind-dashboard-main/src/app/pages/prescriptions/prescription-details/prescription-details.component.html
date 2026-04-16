@@ -1,0 +1,335 @@
+<div class="mb-4 flex items-center justify-between">
+  <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">
+    Prescription Details
+  </h1>
+
+  <a routerLink="/prescriptions"
+     class="rounded-lg border border-gray-200 px-4 py-2 dark:border-gray-800">
+    Back
+  </a>
+</div>
+
+@if (loading) {
+  <div class="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
+    Loading...
+  </div>
+}
+
+@if (error) {
+  <div class="mb-4 rounded-xl border border-red-300 bg-red-50 p-4 text-red-700">
+    {{ error }}
+  </div>
+}
+
+@if (!loading && prescription) {
+
+  <!-- VALIDATION BLOCK -->
+  <div class="mb-6 rounded-xl border p-5 dark:border-gray-800"
+       [class]="validationClass()">
+
+    <div class="flex items-center justify-between gap-3">
+
+      <div>
+
+        <div class="text-sm font-semibold"
+             [class]="validationTitleClass()">
+          Cross-service Validation (Labs → Prescriptions)
+        </div>
+
+        <div class="mt-1 text-sm text-gray-700 dark:text-gray-200">
+          @if (validating) {
+            Checking latest lab report...
+          } @else {
+            {{ validation?.message }}
+          }
+        </div>
+
+        @if (!validating && validation?.labReportId) {
+          <div class="mt-2 text-xs text-gray-600 dark:text-gray-300">
+            Latest report:
+            #{{ validation?.labReportId }}
+            • Date:
+            {{ validation?.reportDate }}
+            • Abnormal:
+            {{ validation?.abnormalCount }}
+            • Max severity:
+            {{ validation?.maxSeverity }}
+          </div>
+        }
+
+      </div>
+
+      <button
+        class="rounded-lg border border-gray-200 px-4 py-2 text-sm dark:border-gray-800"
+        (click)="refreshValidation()">
+        Refresh
+      </button>
+
+    </div>
+
+  </div>
+
+  <!-- PRESCRIPTION DETAILS -->
+  <div class="mb-6 rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
+
+    <div class="mb-4 flex items-center justify-between">
+
+      <div class="text-sm text-gray-500">
+        Status:
+        <span class="font-medium"
+              [class.text-green-700]="isSigned"
+              [class.text-gray-700]="!isSigned">
+          {{ prescription.status || 'DRAFT' }}
+        </span>
+      </div>
+
+      @if (!isSigned) {
+        <button
+          (click)="openSignPad()"
+          class="rounded-lg bg-brand-500 px-4 py-2 text-white hover:bg-brand-600">
+          Sign Prescription
+        </button>
+      } @else {
+        <div class="text-sm text-gray-500">
+          Signed by
+          <span class="font-medium text-gray-900 dark:text-white">
+            {{ prescription.signedBy }}
+          </span>
+
+          @if (prescription.signedAt) {
+            •
+            <span class="font-medium text-gray-900 dark:text-white">
+              {{ prescription.signedAt }}
+            </span>
+          }
+        </div>
+      }
+
+    </div>
+
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+
+      <div>
+        <div class="text-sm text-gray-500">ID</div>
+        <div class="font-medium text-gray-900 dark:text-white">
+          {{ prescription.id }}
+        </div>
+      </div>
+
+      <div>
+        <div class="text-sm text-gray-500">Patient ID</div>
+        <div class="font-medium text-gray-900 dark:text-white">
+          {{ prescription.patientId }}
+        </div>
+      </div>
+
+      <div>
+        <div class="text-sm text-gray-500">Date</div>
+        <div class="font-medium text-gray-900 dark:text-white">
+          {{ prescription.prescriptionDate }}
+        </div>
+      </div>
+
+      <div>
+        <div class="text-sm text-gray-500">Doctor</div>
+        <div class="font-medium text-gray-900 dark:text-white">
+          {{ prescription.doctorName }}
+        </div>
+      </div>
+
+      <div class="md:col-span-2">
+        <div class="text-sm text-gray-500">Notes</div>
+        <div class="font-medium text-gray-900 dark:text-white">
+          {{ prescription.notes }}
+        </div>
+      </div>
+
+      @if (isSigned && prescription.signatureData) {
+        <div class="md:col-span-2 mt-2">
+          <div class="mb-2 text-sm text-gray-500">Signature</div>
+          <img
+            [src]="prescription.signatureData"
+            alt="signature"
+            class="max-w-full rounded border border-gray-200" />
+        </div>
+      }
+
+    </div>
+
+  </div>
+
+  <!-- SIGN PAD -->
+  @if (showSignPad) {
+    <div class="mb-6 rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
+      <div class="mb-4 flex items-center justify-between">
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+          Sign Prescription
+        </h2>
+        <button
+          (click)="closeSignPad()"
+          class="rounded-lg border border-gray-200 px-3 py-1 dark:border-gray-800">
+          Close
+        </button>
+      </div>
+
+      <div class="mb-3">
+        <label class="text-sm text-gray-500">Signed by</label>
+        <input
+          [(ngModel)]="signedBy"
+          class="mt-1 w-full rounded border px-3 py-2"
+          placeholder="Doctor name" />
+      </div>
+
+      <div class="rounded-lg border border-gray-200 p-3 dark:border-gray-800">
+        <canvas
+          #sigCanvas
+          class="w-full"
+          style="height: 200px; touch-action: none;"
+          (pointerdown)="onPointerDown($event)"
+          (pointermove)="onPointerMove($event)"
+          (pointerup)="onPointerUp()"
+          (pointercancel)="onPointerUp()"
+          (pointerleave)="onPointerUp()"
+        ></canvas>
+
+        <div class="mt-3 flex gap-2">
+          <button
+            (click)="clearSignature()"
+            class="rounded-lg border border-gray-200 px-4 py-2 dark:border-gray-800">
+            Clear
+          </button>
+
+          <button
+            (click)="submitSignature()"
+            [disabled]="signing"
+            class="rounded-lg bg-brand-500 px-4 py-2 text-white hover:bg-brand-600 disabled:opacity-50">
+            {{ signing ? 'Signing...' : 'Confirm Sign' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- MEDICATIONS -->
+  <div class="mb-6 rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
+    <div class="mb-4 flex items-center justify-between">
+      <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+        Medications
+      </h2>
+
+      <button
+        (click)="toggleAddForm()"
+        [disabled]="isSigned"
+        class="rounded-lg bg-brand-500 px-4 py-2 text-white hover:bg-brand-600 disabled:opacity-50"
+        title="{{ isSigned ? 'Prescription is signed and locked' : '' }}">
+        + Add Medication
+      </button>
+    </div>
+
+    @if (isSigned) {
+      <div class="mb-4 rounded-lg border border-yellow-200 bg-yellow-50 p-3 text-yellow-900">
+        This prescription is <b>SIGNED</b>. Medications are locked.
+      </div>
+    }
+
+    @if (showAddForm) {
+      <div class="mb-6 rounded-lg border border-gray-200 p-4 dark:border-gray-800">
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
+          <input [(ngModel)]="newMed.medicationName" placeholder="Medication" class="rounded border px-3 py-2" />
+          <input [(ngModel)]="newMed.dosage" placeholder="Dosage" class="rounded border px-3 py-2" />
+          <input [(ngModel)]="newMed.frequency" placeholder="Frequency" class="rounded border px-3 py-2" />
+          <input type="number" [(ngModel)]="newMed.durationDays" placeholder="Days" class="rounded border px-3 py-2" />
+        </div>
+
+        <div class="mt-4 flex gap-2">
+          <button
+            (click)="addMedication()"
+            class="rounded-lg bg-brand-500 px-4 py-2 text-white hover:bg-brand-600">
+            Save
+          </button>
+
+          <button
+            (click)="toggleAddForm()"
+            class="rounded-lg border border-gray-200 px-4 py-2 dark:border-gray-800">
+            Cancel
+          </button>
+        </div>
+      </div>
+    }
+
+    <table class="w-full text-left">
+      <thead>
+        <tr class="border-b border-gray-200 dark:border-gray-800">
+          <th class="py-2">Medication</th>
+          <th class="py-2">Dosage</th>
+          <th class="py-2">Frequency</th>
+          <th class="py-2">Days</th>
+          <th class="py-2">Actions</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        @for (m of medications; track m.id) {
+          <tr class="border-b border-gray-100 dark:border-gray-800">
+
+            @if (editingMedId === m.id) {
+
+              <td class="py-2">
+                <input [(ngModel)]="editMed.medicationName" class="w-full rounded border px-2 py-1" />
+              </td>
+
+              <td class="py-2">
+                <input [(ngModel)]="editMed.dosage" class="w-full rounded border px-2 py-1" />
+              </td>
+
+              <td class="py-2">
+                <input [(ngModel)]="editMed.frequency" class="w-full rounded border px-2 py-1" />
+              </td>
+
+              <td class="py-2">
+                <input type="number" [(ngModel)]="editMed.durationDays" class="w-20 rounded border px-2 py-1" />
+              </td>
+
+              <td class="py-2 flex gap-2">
+                <button (click)="saveEdit()" class="text-green-600 hover:underline">Save</button>
+                <button (click)="cancelEdit()" class="text-gray-600 hover:underline">Cancel</button>
+              </td>
+
+            } @else {
+
+              <td class="py-2">{{ m.medicationName }}</td>
+              <td class="py-2">{{ m.dosage }}</td>
+              <td class="py-2">{{ m.frequency }}</td>
+              <td class="py-2">{{ m.durationDays }}</td>
+              <td class="py-2 flex gap-3">
+                <button
+                  (click)="startEdit(m)"
+                  [disabled]="isSigned"
+                  class="text-blue-600 hover:underline disabled:opacity-40">
+                  Edit
+                </button>
+
+                <button
+                  (click)="deleteMed(m.id)"
+                  [disabled]="isSigned"
+                  class="text-red-600 hover:underline disabled:opacity-40">
+                  Delete
+                </button>
+              </td>
+
+            }
+
+          </tr>
+        }
+      </tbody>
+    </table>
+
+    @if (medications.length === 0) {
+      <div class="mt-4 text-sm text-gray-500">No medications yet.</div>
+    }
+  </div>
+
+  <!-- FLOATING AI ONLY -->
+  <app-ai-floating-assistant [prescriptionId]="prescriptionId"></app-ai-floating-assistant>
+
+}
