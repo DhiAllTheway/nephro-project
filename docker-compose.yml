@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  lab-db:
+    image: mysql:8.0
+    container_name: lab-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: lab_results_db
+    ports:
+      - "3307:3306"
+
+  prescriptions-db:
+    image: mysql:8.0
+    container_name: prescriptions-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: prescriptions_db
+    ports:
+      - "3308:3306"
