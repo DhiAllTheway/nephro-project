@@ -17,11 +17,12 @@ pipeline {
         }
 
         stage('2 - Start Test Databases') {
-            steps {
-                sh 'docker compose up -d lab-db prescriptions-db'
-                sh 'sleep 25'
-            }
-        }
+        steps {
+        sh 'docker rm -f lab-db prescriptions-db || true'
+        sh 'docker compose up -d lab-db prescriptions-db'
+        sh 'sleep 25'
+         }
+         }
 
         stage('3 - Build Maven') {
             steps {
