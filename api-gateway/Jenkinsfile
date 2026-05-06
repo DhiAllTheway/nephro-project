@@ -1,0 +1,65 @@
+pipeline {
+    agent any
+
+    environment {
+        MS_NAME = 'api-gateway'
+        IMAGE_NAME = 'dhidr/api-gateway'
+        IMAGE_TAG = 'latest'
+        DOCKER_CREDS = credentials('docker-hub-credentials')
+    }
+
+    stages {
+        stage('1 - Checkout') {
+            steps {
+                git branch: 'main',
+                    url: 'https://github.com/dd1-u/nephro-project.git'
+            }
+        }
+
+        stage('2 - Build Maven') {
+            steps {
+                dir("${MS_NAME}") {
+                    sh 'chmod +x mvnw'
+                    sh './mvnw clean package -DskipTests'
+                }
+            }
+        }
+
+        stage('3 - Tests') {
+            steps {
+                dir("${MS_NAME}") {
+                    sh './mvnw test'
+                }
+            }
+            post {
+                always {
+                    junit "${MS_NAME}/target/surefire-reports/*.xml"
+                }
+            }
+        }
+
+        stage('4 - Docker Build') {
+            steps {
+                dir("${MS_NAME}") {
+                    sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
+                }
+            }
+        }
+
+        stage('5 - Docker Push') {
+            steps {
+                sh 'echo $DOCKER_CREDS_PSW | docker login -u $DOCKER_CREDS_USR --password-stdin'
+                sh "docker push ${IMAGE_NAME}:${IMAGE_TAG}"
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "CI SUCCESS: ${IMAGE_NAME}:${IMAGE_TAG} pushed to Docker Hub"
+        }
+        failure {
+            echo "CI FAILED: check Jenkins logs"
+        }
+    }
+}
