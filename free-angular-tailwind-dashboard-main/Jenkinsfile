@@ -1,0 +1,59 @@
+pipeline {
+    agent any
+
+    environment {
+        FRONTEND_NAME = 'free-angular-tailwind-dashboard-main'
+        IMAGE_NAME = 'dhidr/frontend'
+        IMAGE_TAG = 'latest'
+        DOCKER_CREDS = credentials('docker-hub-credentials')
+    }
+
+    stages {
+        stage('1 - Checkout') {
+            steps {
+                git branch: 'main',
+                    url: 'https://github.com/dd1-u/nephro-project.git'
+            }
+        }
+
+        stage('2 - Install Dependencies') {
+            steps {
+                dir("${FRONTEND_NAME}") {
+                    sh 'npm ci'
+                }
+            }
+        }
+
+        stage('3 - Build Angular') {
+            steps {
+                dir("${FRONTEND_NAME}") {
+                    sh 'npm run build'
+                }
+            }
+        }
+
+        stage('4 - Docker Build') {
+            steps {
+                dir("${FRONTEND_NAME}") {
+                    sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
+                }
+            }
+        }
+
+        stage('5 - Docker Push') {
+            steps {
+                sh 'echo $DOCKER_CREDS_PSW | docker login -u $DOCKER_CREDS_USR --password-stdin'
+                sh "docker push ${IMAGE_NAME}:${IMAGE_TAG}"
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "CI SUCCESS: ${IMAGE_NAME}:${IMAGE_TAG} pushed to Docker Hub"
+        }
+        failure {
+            echo "CI FAILED: check Jenkins logs"
+        }
+    }
+}
