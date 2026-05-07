@@ -46,15 +46,26 @@ pipeline {
             }
         }
 
-        stage('5 - Docker Build') {
-            steps {
-                dir("${MS_NAME}") {
+          stage('5 - SonarQube Analysis') {
+             steps {
+                 dir("${MS_NAME}") {
+            withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
+                sh './mvnw sonar:sonar -Dsonar.projectKey=nephro-project -Dsonar.host.url=http://localhost:9000 -Dsonar.token=$SONAR_TOKEN'
+            }
+        }
+    }
+}        
+
+
+            stage('6 - Docker Build') {
+               steps {
+                   dir("${MS_NAME}") {
                     sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
                 }
             }
         }
 
-        stage('6 - Docker Push') {
+        stage('7 - Docker Push') {
             steps {
                 sh 'echo $DOCKER_CREDS_PSW | docker login -u $DOCKER_CREDS_USR --password-stdin'
                 sh "docker push ${IMAGE_NAME}:${IMAGE_TAG}"
