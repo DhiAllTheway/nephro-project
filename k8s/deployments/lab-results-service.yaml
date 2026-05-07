@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lab-results-service
+  namespace: nephro
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: lab-results-service
+  template:
+    metadata:
+      labels:
+        app: lab-results-service
+    spec:
+      containers:
+        - name: lab-results-service
+          image: dhidr/lab-results-service:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 9003
+          env:
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:mysql://mysql-lab:3306/lab_results_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: username
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: password
+            - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+              value: http://eureka-server:8761/eureka/
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lab-results-service
+  namespace: nephro
+spec:
+  selector:
+    app: lab-results-service
+  ports:
+    - port: 9003
+      targetPort: 9003
+  type: ClusterIP

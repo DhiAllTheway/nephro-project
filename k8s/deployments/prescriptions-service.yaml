@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prescriptions-service
+  namespace: nephro
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prescriptions-service
+  template:
+    metadata:
+      labels:
+        app: prescriptions-service
+    spec:
+      containers:
+        - name: prescriptions-service
+          image: dhidr/prescriptions-service:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 9004
+          env:
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:mysql://mysql-prescriptions:3306/prescriptions_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: username
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: password
+            - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+              value: http://eureka-server:8761/eureka/
+            - name: GATEWAY_URL
+              value: http://api-gateway:8082
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prescriptions-service
+  namespace: nephro
+spec:
+  selector:
+    app: prescriptions-service
+  ports:
+    - port: 9004
+      targetPort: 9004
+  type: ClusterIP
