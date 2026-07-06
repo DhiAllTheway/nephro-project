@@ -1,241 +1,160 @@
-# 📘 Projet Nephro – Documentation Technique
+📘 Nephro Platform – Distributed Clinical Decision System
+⚠️ Important Context
 
-## 1. Présentation Générale
+Nephro is a large-scale microservices-based medical decision support platform.
 
-Nephro est un système distribué d’aide à la décision médicale basé sur une architecture microservices.
+This repository represents only a subset of the full system (1 of 10 core modules).
 
-Ce système a pour objectif de transformer des données médicales brutes en informations exploitables afin d’assister les professionnels de santé dans leurs décisions cliniques.
+Each microservice is:
 
-Le projet intègre plusieurs fonctionnalités essentielles telles que :
+independently developed
+independently deployable
+responsible for a specific domain
 
-* L’analyse des résultats biologiques
-* La gestion des prescriptions médicales
-* La validation inter-services
-* Une assistance intelligente basée sur l’IA
-* Un calendrier clinique pour le suivi des décisions
+👉 The full application is composed of 10 interconnected modules, each owned by different contributors and teams.
 
----
+This repository focuses on the clinical analysis + prescription intelligence layer, which integrates into the broader ecosystem via the API Gateway.
 
-## 2. Architecture du Système
+🧠 System Vision
 
-L’architecture du système repose sur une organisation en microservices, garantissant modularité, scalabilité et maintenabilité.
+Nephro transforms raw medical data into structured clinical intelligence, enabling:
 
-### Composants principaux :
+automated anomaly detection
+decision validation
+AI-assisted explanations
+time-based clinical tracking
+cross-module verification
 
-* **Frontend** : Application Angular (interface utilisateur)
-* **API Gateway** : Point d’entrée unique des requêtes (Spring Cloud Gateway)
-* **Eureka Server** : Service de découverte
-* **Microservices** :
+The system follows a strict pipeline:
 
-  * lab-results-service
-  * prescriptions-service
+Data → Analysis → Validation → Decision → Action → Monitoring
 
-### Principe fondamental :
+🏗️ Architecture Overview
+Core Infrastructure
+Frontend: Angular dashboard (clinical interface)
+API Gateway: Single entry point for all requests
+Eureka Server: Service discovery and registration
+Microservices: Domain-specific clinical modules
+Kubernetes + Docker: Deployment & orchestration layer
+🧩 This Module (Current Repository Scope)
 
-Le frontend ne communique jamais directement avec les microservices. Toutes les requêtes passent obligatoirement par l’API Gateway.
+This module is responsible for:
 
----
+🧪 1. Lab Results Intelligence Engine
+Processing biological reports
+Detecting anomalies in patient results
+Assigning severity levels (NORMAL / FOLLOW_UP / URGENT)
+Generating structured clinical insights
+📊 2. Cross-Module Validation System
+Validates prescriptions against latest lab results
+Communicates through API Gateway
+Returns structured decision status:
+OK
+WARNING
+ERROR
 
-## 3. Description des Microservices
+👉 Ensures inter-service medical consistency
 
-### 3.1 Lab Results Service
+🧠 3. AI Clinical Assistant (Ollama – Gemma Model)
+Generates explanations for prescriptions
+Assists clinicians with decision interpretation
+Provides contextual reasoning based on patient data
 
-Responsabilités :
+Endpoint:
 
-* Gestion des rapports biologiques
-* Gestion des résultats biologiques
-* Analyse des anomalies et de leur gravité
-* Génération d’événements pour le calendrier
-* Fourniture de statistiques
-
-### 3.2 Prescriptions Service
-
-Responsabilités :
-
-* Gestion des prescriptions médicales
-* Gestion des médicaments
-* Processus de signature
-* Mécanisme de verrouillage
-* Validation croisée avec les résultats biologiques
-* Génération d’explications via IA
-
----
-
-## 4. Bases de Données
-
-Chaque microservice possède sa propre base de données :
-
-* **lab_results_db**
-
-  * biological_report
-  * biological_result
-
-* **prescriptions_db**
-
-  * prescription
-  * prescribed_medication
-
----
-
-## 5. Fonctionnalité Clé : Système de Calendrier
-
-Le calendrier représente les décisions cliniques dans le temps et constitue un élément central du système.
-
-Chaque rapport génère deux événements :
-
-### 1. Événement de rapport
-
-* Date : date du rapport
-* Type : REPORT
-
-### 2. Événement de suivi
-
-Déterminé selon le niveau de gravité :
-
-* NORMAL → +30 jours
-* FOLLOW_UP → +7 jours
-* URGENT → +2 jours
-
-Ce mécanisme permet :
-
-* Le suivi des patients
-* L’identification des cas urgents
-* La planification des actions médicales
-
----
-
-## 6. Implémentation Backend
-
-* DTO utilisé : `CalendarEventDTO`
-* Service principal : `BiologicalReportService`
-* Méthode : `getCalendarEvents()`
-
-### Endpoint :
-
-```http
-GET /lab-reports/calendar
-```
-
----
-
-## 7. Implémentation Frontend
-
-Localisation :
-
-```
-src/app/pages/calendar/
-```
-
-Fonctionnalités :
-
-* Affichage sous forme de grille mensuelle
-* Navigation entre les mois
-* Code couleur des événements :
-
-  * Bleu : REPORT
-  * Vert : NORMAL
-  * Jaune : FOLLOW_UP
-  * Rouge : URGENT (avec animation)
-
-Interaction :
-
-* Clic sur un événement → affichage du détail du rapport
-
----
-
-## 8. Validation Inter-Services
-
-Flux de validation :
-
-Prescription → API Gateway → Lab Results Service → récupération du dernier rapport
-
-Résultat retourné :
-
-* OK
-* WARNING
-* ERROR
-
----
-
-## 9. Système d’Intelligence Artificielle
-
-Le système utilise Ollama en local avec le modèle **gemma3**.
-
-### Utilisation :
-
-* Explication des prescriptions
-* Assistance clinique
-
-### Endpoint :
-
-```http
 GET /prescriptions/{id}/ai-explanation
-```
+📅 4. Smart Clinical Calendar System
 
----
+The calendar is a decision-driven scheduling engine, not just a UI component.
 
-## 10. Principes UX
+Features:
+Auto-generates events from lab reports
+Schedules follow-ups based on severity
+Logic:
+NORMAL → +30 days
+FOLLOW_UP → +7 days
+URGENT → +2 days
+Event Types:
+REPORT event (exact report date)
+FOLLOW-UP event (computed critical scheduling)
+UI Behavior:
+Monthly grid display
+Navigation between periods
+Event click → detailed report view
+Visual Encoding:
+🔵 Blue → REPORT
+🟢 Green → NORMAL
+🟡 Yellow → FOLLOW_UP
+🔴 Red → URGENT (with alert emphasis)
+🖱️ 5. Digital Mouse Pad Signature System
 
-Le système est conçu selon les principes suivants :
+A secure clinical authentication mechanism enabling:
 
-* Visibilité des informations
-* Priorisation clinique
-* Aide à la décision
+handwritten-style digital signature capture
+physician approval validation
+tamper-resistant signing flow
+Purpose:
 
-Le calendrier joue un rôle central en permettant :
+Ensures that prescriptions and decisions are clinically authorized and traceable
 
-* Le suivi des patients
-* La mise en évidence des cas critiques
-* La planification des actions
+🔒 6. Auto-Lock Security Layer
 
----
+Security mechanism that:
 
-## 11. Limitations Actuelles
+locks sensitive clinical actions after inactivity
+prevents unauthorized modifications
+forces re-authentication for critical operations
+Applied to:
+prescriptions
+validation steps
+sensitive patient data actions
+🚨 7. Cross-Module Alert System
 
-* Absence de regroupement d’événements
-* Pas de prévisualisation au survol
-* Chargement de tous les événements sans pagination
-* Absence de filtrage par patient
+A real-time clinical safety layer that:
 
----
+detects abnormal lab results
+triggers alerts across services
+propagates risk signals to other modules
+Alert Levels:
+INFO
+WARNING
+CRITICAL
 
-## 12. Améliorations Futures
+This ensures system-wide awareness of patient risk states
 
-* Filtrage intelligent du calendrier
-* Prévisualisation des événements
-* Regroupement des événements
-* Prédiction des risques via IA
-* Tableau de bord analytique
+📈 8. Clinical Statistics Engine
 
----
+Provides aggregated insights:
 
-## 13. Endpoints de Test
+patient trends over time
+anomaly frequency tracking
+prescription effectiveness signals
+severity distribution analytics
 
-### Calendrier :
+Used for:
 
-```http
+clinical dashboards
+decision support
+long-term monitoring
+🧠 UX / Clinical Design Principles
+
+The system is built around:
+
+clarity of medical priority
+reduction of cognitive overload
+fast identification of critical cases
+decision traceability
+time-aware medical action planning
+⚙️ Key Endpoints
+Calendar
 GET /lab-reports/calendar
-```
-
-### IA :
-
-```http
+AI Assistant
 GET /prescriptions/{id}/ai-explanation
-```
-
-### Validation :
-
-```http
+Validation
 GET /prescriptions/{id}/validation
-```
-
----
-
-## 14. Conclusion
-
-Le système Nephro ne se limite pas à une simple application CRUD.
-
-Il établit une chaîne complète :
-**Données → Analyse → Décision → Action**
-
-Ce qui en fait un véritable prototype de système d’aide à la décision médicale.
+🚧 Current Limitations (Module Scope)
+No global patient aggregation layer
+Limited cross-module visualization
+No predictive risk model (future AI upgrade)
+No unified multi-module dashboard
+No real-time streaming UI updates
